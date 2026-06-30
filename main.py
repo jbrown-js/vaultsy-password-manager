@@ -1,5 +1,10 @@
 import customtkinter as ctk
 import json
+from cryptography.fernet import Fernet
+
+with open("key.key", "rb") as file:
+    KEY = file.read()
+fernet = Fernet(KEY)
 
 ctk.set_appearance_mode("dark")
 
@@ -13,16 +18,22 @@ selected_login = None
 current_category = "All"
 
 def savePasswords():
-    with open("passwords.json", "w") as file:
-        json.dump(passwords, file)
+    data = json.dumps(passwords)
+    encrypted = fernet.encrypt(data.encode())
+    with open("passwords.dat", "wb") as file:
+        file.write(encrypted)
 
 
 def loadPasswords():
     global passwords
 
     try:
-        with open("passwords.json", "r") as file:
-            passwords = json.load(file)
+        with open("passwords.dat", "rb") as file:
+            encrypted = file.read()
+
+        decrypted = fernet.decrypt(encrypted)
+        passwords = json.loads(decrypted.decode())
+        
     except:
         passwords = []
 
